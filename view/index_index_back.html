@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="renderer" content="webkit">
+  <link href="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.bootcss.com/video.js/7.7.6/alt/video-js-cdn.min.css" rel="stylesheet">
+  <link href="https://cdn.bootcss.com/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+  <link href="static/css/main.css" rel="stylesheet">
+  <title>茶叶展</title>
+</head>
+<body>
+<div class="header">
+  <img src="static/images/head_bg.jpg" width="100%">
+</div>
+<div class="title">活动视频</div>
+<div class="video row"  style="max-width: 544px;>
+  <div class="col-sm-12 clearfix"">
+<!--    <video id="example_video_1" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="none"-->
+<!--           width="317" height="560"-->
+<!--           poster="static/video/cf6.jpg"-->
+<!--           data-setup="{}">-->
+<!--      <source src="static/video/cf6.mp4" type='video/mp4'/>-->
+<!--    </video>-->
+
+    <video
+        id="video"
+        src="static/video/cf6.mp4"
+        width="100%"
+        controls = "true"
+        poster="static/video/cf6.jpg"
+        webkit-playsinline="true"
+        playsinline="true"
+        x-webkit-airplay="allow"
+        x5-video-player-type="h5"
+        x5-video-player-fullscreen="true"
+        x5-video-orientation="portraint"
+        preload="metadata"
+        style="object-fit:fill"
+    ></video>
+    <div class="video_title">县市长请您品春茶</div>
+  </div>
+</div>
+<div class="title">春茶优品</div>
+<div class="main row">
+
+  {% for item in lists %}
+  <a href="{{ item.link }}" target="_blank" class="pd_common">
+    <div class="col-lg-3 pd_common_inner">
+      <div class="pd_pic_wrap">
+        <div class="pd_pic_content">
+          <img class="lazy pd_pic fadein" alt="{{ item.title }}" data-original="{{ item.images }}" data-resize="0">
+        </div>
+      </div>
+      <div class="pd_info">
+        <div class="pd_title">{{ item.title }}</div>
+        <div class="pd_wrap">
+          <div class="intro">
+            {{ item.intro }}
+          </div>
+          <div class="pd_now_price">抢购价：<span class="money">￥{{ item.price }}</span></div>
+          <div class="pd_btn pd_deposit">立即抢购</div>
+        </div>
+      </div>
+    </div>
+  </a>
+  {% if loop.index === 12 %}
+  <img class="add lazy" style="max-width: 1000px;display: block;margin:30px auto" data-original="static/images/add.jpg"
+       alt="" width="100%"/>
+  {% endif %}
+  {% endfor %}
+</div>
+
+<div class="footer_wrap">
+  <div class="footer row">
+    <div class="col-lg-2">
+      <img src="static/images/logo.png" alt="" width="120px;"/>
+      <p style="font-size: 16px;margin-top:6px;">&nbsp;&nbsp;010-82106329</p></div>
+    <div class="col-lg-7" style="margin-top:16px;">
+      <p style="font-weight: bold;line-height: 24px;color:#000;font-size: 16px;">媒体支持：</p>
+      <span style="text-align: justify">农民日报、农视网、茗边、《乡土》全媒体、腾讯新闻APP、腾讯三农、美食、生活、知识、看点快报、懂茶帝、茶语网、中国茶网、茶叶集市、茶传媒、徽茶、北京茶友会、茶根香、茶情报、大茶网、茶社会、尚茶周刊、天下茶友网、北京茶世界等
+</span>
+    </div>
+    <div class="col-lg-3" style="margin-top:16px;">
+      <p style="font-weight: bold;line-height: 21px;color:#000;font-size: 16px;">版权所有:</p>
+      <span>茶产业委员会</span><br/><br/>
+      <span>Copyright 2014 All rights reserved</span><br/>
+      <span>京ICP备12042695号-6</span>
+    </div>
+  </div>
+</div>
+<style>
+  #video{
+    display: block;
+    clear: both;
+    margin: 0 auto;
+  }
+</style>
+
+
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery_lazyload/1.9.7/jquery.lazyload.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      $('.pd_pic_content').css('height', $('.pd_pic_content').width())
+    })
+    $(window).resize(function() {
+      $('.pd_pic_content').css('height', $('.pd_pic_content').width())
+    })
+
+    $(function() {
+      $('img.lazy').lazyload({effect: 'fadeIn'})
+    })
+  </script>
+</body>
+</html>

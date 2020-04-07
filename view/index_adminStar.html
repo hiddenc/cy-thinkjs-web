@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <title>后台管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <link href="https://cdn.bootcss.com/element-ui/2.13.0/theme-chalk/index.css" rel="stylesheet">
+  <script src="/static/js/index.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.19.2/axios.js"></script>
+</head>
+<body style="padding-right:0 !important;width: 90%; margin: 0px auto">
+<div id="app">
+  <template>
+    <el-row :gutter="10">
+      <el-col :span="4">
+        <el-alert
+            title="排序值越大排序越靠前,相同排序创建日期越新越靠前"
+            type="success"
+        >
+        </el-alert>
+      </el-col>
+      <el-col :span="4">
+        <el-alert
+            title="点击确认修改后产品信息才会修改"
+            type="success">
+      </el-col>
+      <el-col :span="4">
+        <el-alert
+            title="价格请保持小数点后位数一致"
+            type="success">
+      </el-col>
+      <el-col :span="4">
+        <el-alert
+            title="产品删除后将不可恢复"
+            type="success">
+      </el-col>
+    </el-row>
+
+    <el-table
+        highlight-current-row
+        ref="singleTable"
+        @current-change="handleCurrentChange"
+        :data="tableData2"
+        v-loading="loading"
+        style="width: 100%;margin-top:12px;">
+
+      <el-table-column
+          label="ID"
+          width="60"
+          align="center">
+        <template slot-scope="scope">
+          <span style="text-align: center">${ scope.row.id }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          label="排序"
+          width="80"
+          align="center">
+        <template slot-scope="scope">
+          <el-input type="number" style="text-align:center" v-model="scope.row.sort"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          label="标题"
+          width="240"
+          align="center">
+        <template slot-scope="scope">
+          <el-input v-model="scope.row.title"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+              label="链接"
+              width="200"
+              align="center">
+        <template slot-scope="scope">
+          <el-input v-model="scope.row.link"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          label="描述"
+          align="center"
+          min-width="260">
+        <template slot-scope="scope">
+          <el-input type="textarea" size="medium" v-model="scope.row.intro"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          label="价格"
+          align="center"
+          width="100">
+        <template slot-scope="scope">
+          <el-input v-model="scope.row.price" type="number"/>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+          label="图片"
+          width="120"
+          align="center"
+      >
+        <template slot-scope="scope">
+          <el-image
+              style="width: 100px; height: 100px"
+              :src="'/'+scope.row.images"
+              lazy
+              fit="fit"></el-image>
+          <el-button size="mini" @click="handleEdit('',scope.$index, scope.row)" icon="el-icon-search" circle></el-button>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <el-button
+              size="mini"
+              type="primary"
+              @click="handleSubmit(scope.$index, scope.row)">确认修改
+          </el-button>
+          <el-popconfirm title="确认删除此产品吗？" @on-Confirm="handleDelete(scope.$index, scope.row)">
+            <el-button
+                size="mini"
+                type="danger"
+                slot="reference"
+            >删除
+            </el-button>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog title="图片" class="el-dialog-img2" :visible.sync="dialogFormVisible" >
+      <div style="display: flex;flex-wrap:wrap">
+        <div class="block" v-for="image in imagesList">
+          <div style="margin:10px;position: relative">
+            <el-image
+                style="width: 250px; height: 250px;"
+                :src="'/' + image.urls"
+                fit="fit"></el-image>
+            <el-button type="primary" @click="changeImg(image.urls)" icon="el-icon-thumb" circle></el-button>
+            <p style="text-align: center">${ image.urls.replace('static/images/products/','') }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">
+          取消
+        </el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="新增产品" :visible.sync="dialogNewFormVisible" class="el-dialog-img addNew">
+      <el-form ref="dataForm" :inline="true" :model="newPro" label-position="left" label-width="70px"
+               style="width: 100%; margin-left:50px;">
+        <el-form-item label="排序" prop="sort">
+          <el-input v-model="newPro.sort" type="number"/>
+        </el-form-item>
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="newPro.title" />
+        </el-form-item>
+        <br>
+        <el-form-item label="描述" prop="intro" rows="3">
+          <el-input type="textarea" v-model="newPro.intro"/>
+        </el-form-item>
+        <el-form-item label="链接" prop="link">
+          <el-input v-model="newPro.link"/>
+        </el-form-item>
+        <el-form-item label="价格" prop="price">
+          <el-input v-model="newPro.price" type="number"/>
+        </el-form-item>
+        <br>
+        <el-form-item label="图片" prop="images">
+        <el-image
+            style="width: 210px; height: 210px"
+            :src="'/'+newPro.images"
+            lazy
+            fit="fit"></el-image>
+          <el-button @click="handleEdit('new')" icon="el-icon-search" circle></el-button>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">
+          取消
+        </el-button>
+        <el-button type="primary" @click="createData">
+          确认
+        </el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog class="el-dialog-img" title="上传图片" :visible.sync="dialogUpload">
+    <el-upload
+        class="upload-demo"
+        drag
+        action="/index/imgUpload"
+        :on-success="handleAvatarSuccess"
+        multiple>
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+      <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+    </el-upload>
+    </el-dialog>
+    <div style="position: absolute; right:5%;top:3%;">
+      <el-button type="primary" plain @click="addNew">新增</el-button>
+      <el-button plain @click="uploadImages">上传图片</el-button>
+    </div>
+  </template>
+</div>
+<style>
+  /*.el-input__inner {*/
+  /*  text-align: center;*/
+  /*}*/
+  .el-dialog {
+    width: 80%;
+  }
+  .el-dialog-img{
+    width: 60%;
+    margin:0 auto;
+  }
+  /*.el-dialog-img2 {*/
+  /*  margin: 0 auto !important;*/
+  /*  height: 90%;*/
+  /*  overflow: hidden;*/
+  /*}*/
+  .el-dialog-img2 .el-dialog__body {
+    height: 500px;
+    overflow: hidden;
+    overflow-y: auto;
+  }
+  .upload-demo{
+    margin:0 auto
+  }
+  .el-table td, .el-table th{
+    padding:4px 0
+  }
+  .el-table .el-button.is-circle{
+    position: absolute;
+    left: 50px;
+    top: 40px;
+    opacity: 0.8;
+  }
+  .el-dialog-img2 .el-button.is-circle{
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    opacity: 0.9;
+  }
+  .addNew .el-dialog-img2{
+
+  }
+  .addNew .el-button.is-circle{
+    position: absolute;
+    left: 90px;
+    top: 80px;
+    opacity: 0.9;
+  }
+
+</style>
+<script>
+  var app = new Vue({
+    delimiters: ['${', '}}'],
+    el: '#app',
+    data() {
+      return {
+        newPro:{
+          images:'static/images/products/01.jpg'
+        },
+        work:null,
+        dialogFormVisible: false,
+        dialogNewFormVisible: false,
+        dialogUpload: false,
+        tableData2: [],
+        loading: true,
+        currentId: null,
+        imagesList: [],
+      }
+    },
+    created() {
+      this.getLists()
+    },
+    methods: {
+      async getLists() {
+        try {
+          let res = await axios.get('/lists')
+          this.tableData2 = res.data.data
+          console.log(this.tableData2)
+        } catch (err) {
+          console.log(err)
+          alert('请求出错')
+        }
+        this.loading = false
+      },
+      async getImages() {
+        try {
+          let res = await axios.get('/images')
+          this.imagesList = res.data.data
+          console.log(this.imagesList)
+        } catch (err) {
+          console.log(err)
+          alert('请求出错')
+        }
+        this.loading = false
+      },
+      handleEdit(source,index, row) {
+        this.getImages()
+        this.dialogFormVisible = true
+        this.work = source
+        this.currentIndex = index
+      },
+      async handleSubmit(index, row) {
+        this.loading = true
+        let that = this, id = row.id, tmp = row
+        delete tmp.id
+        delete tmp.status
+        try {
+          await axios({
+            method: 'put',
+            url: '/lists',
+            params: {
+              id: id,
+            },
+            data: tmp,
+          }).then(function(res) {
+            that.getLists()
+            if (res.status === 200) {
+              that.$notify({
+                title: '成功',
+                message: '修改成功',
+                type: 'success',
+                duration: 2000,
+              })
+            } else {
+              that.$notify({
+                title: '失败',
+                message: '修改成功',
+                type: 'error',
+                duration: 2000,
+              })
+            }
+          })
+        } catch (err) {
+          this.loading = false
+          console.log(err)
+          alert('请求出错')
+        }
+      },
+      async handleDelete(index, row) {
+        this.loading = true
+        let that = this
+        try {
+          await axios({
+            method: 'put',
+            url: '/lists',
+            params: {
+              id: row.id,
+            },
+            data: {
+              status: 0,
+            },
+          }).then(function(res) {
+            that.getLists()
+            this.loading = false
+            if (res.status === 200) {
+              that.$notify({
+                title: '成功',
+                message: '修改成功',
+                type: 'success',
+                duration: 2000,
+              })
+            } else {
+              that.$notify({
+                title: '失败',
+                message: '修改成功',
+                type: 'error',
+                duration: 2000,
+              })
+            }
+          })
+        } catch (err) {
+          this.loading = false
+          console.log(err)
+          alert('请求出错')
+        }
+      },
+      changeImg(url) {
+        if(this.work === 'new'){
+          this.newPro.images = url
+        } else {
+          this.tableData2[this.currentIndex].images = url
+        }
+        this.dialogFormVisible = false
+      },
+      addNew() {
+        this.dialogNewFormVisible = true
+      },
+      cancel(){
+        this.dialogNewFormVisible = false
+        this.dialogFormVisible = false
+      },
+      uploadImages(){
+        this.dialogUpload = true
+      },
+      async createData(){
+        this.dialogNewFormVisible = false
+        this.loading = true
+        let that = this
+        try {
+          await axios({
+            method: 'post',
+            url: '/lists',
+            data: that.newPro,
+          }).then(function(res) {
+            that.getLists()
+            if (res.status === 200) {
+              that.newPro = {
+                images:'static/images/products/01.jpg'
+              }
+              that.$notify({
+                title: '成功',
+                message: '添加产品成功',
+                type: 'success',
+                duration: 2000,
+              })
+            } else {
+              that.$notify({
+                title: '失败',
+                message: '添加产品失败',
+                type: 'error',
+                duration: 2000,
+              })
+            }
+          })
+        } catch (err) {
+          this.loading = false
+          console.log(err)
+          alert('请求出错')
+        }
+      },
+      async handleAvatarSuccess(res, file){
+        console.log(res.data.name)
+
+        const urls = 'static/images/products/' + res.data.name
+        const Data = {
+          urls: urls,
+          status: 1
+        }
+        try {
+          await axios({
+            method: 'post',
+            url: '/index/images',
+            data: Data
+          }).then(function(res) {
+            if (res.status === 200) {
+              console.log('图片已保存到数据库')
+            } else {
+              console.log('图片保存到数据库失败')
+            }
+          });
+        } catch (err) {
+          // console.log(err);
+          console.log('图片保存到数据库失败');
+        }
+      },
+
+
+      handleCurrentChange(val) {
+        this.currentRow = val;
+      },
+      setCurrent(row) {
+        this.$refs.singleTable.setCurrentRow(row);
+      },
+    },
+  })
+</script>
+</body>
+</html>
